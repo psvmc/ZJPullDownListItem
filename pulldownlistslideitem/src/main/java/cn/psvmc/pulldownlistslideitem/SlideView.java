@@ -16,14 +16,12 @@ public class SlideView extends LinearLayout {
     private View itemView;
     private Scroller mScroller;
     private OnSlideListener mOnSlideListener;
-    private boolean mIsMoveClick = false;
     private int slideItemWidth = 100;
     private int leftSlideWidth = 0;
     private int rightSlideWidth = 0;
 
     private int mLastX = 0;
     private int mLastY = 0;
-    private static final int TAN = 2;
 
     public interface OnSlideListener {
         int SLIDE_STATUS_OFF = 0;
@@ -76,18 +74,17 @@ public class SlideView extends LinearLayout {
         if (getScrollX() != 0) {
             this.smoothScrollTo(0, 0);
         }
-        mIsMoveClick = false;
     }
 
     public void onRequireTouchEvent(MotionEvent event) {
         int x = (int) event.getX();
         int y = (int) event.getY();
         int scrollX = getScrollX();
-
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN: {
                 if (!mScroller.isFinished()) {
-                    mScroller.abortAnimation();
+                    //mScroller.abortAnimation();
+                    shrink();
                 }
                 if (mOnSlideListener != null) {
                     mOnSlideListener.onSlide(this, OnSlideListener.SLIDE_STATUS_START_SCROLL);
@@ -97,32 +94,28 @@ public class SlideView extends LinearLayout {
             case MotionEvent.ACTION_MOVE: {
                 int deltaX = x - mLastX;
                 int deltaY = y - mLastY;
-                if (Math.abs(deltaX) < Math.abs(deltaY) * TAN) {
+                //保证是水平方向移动
+                if (Math.abs(deltaX) < Math.abs(deltaY) * 2) {
                     break;
                 }
                 int newScrollX = scrollX - deltaX;
                 if (deltaX != 0) {
-                    if (newScrollX < 0 && newScrollX < -leftSlideWidth) {
+                    if (newScrollX < -leftSlideWidth) {
                         newScrollX = -leftSlideWidth;
                     } else if (newScrollX > rightSlideWidth) {
                         newScrollX = rightSlideWidth;
-                    } else {
-
                     }
                     this.scrollTo(newScrollX, 0);
+
                 }
                 break;
             }
             case MotionEvent.ACTION_UP: {
                 int newScrollX = 0;
-                if (scrollX - rightSlideWidth * 0.5 > 0) {
+                if (scrollX - slideItemWidth * 0.1 > 0) {
                     newScrollX = rightSlideWidth;
-                    mIsMoveClick = !mIsMoveClick;
-                } else if (-scrollX - leftSlideWidth * 0.5 > 0) {
+                } else if (-scrollX - slideItemWidth * 0.1 > 0) {
                     newScrollX = -leftSlideWidth;
-                    mIsMoveClick = !mIsMoveClick;
-                } else {
-                    mIsMoveClick = false;
                 }
                 this.smoothScrollTo(newScrollX, 0);
                 if (mOnSlideListener != null) {
