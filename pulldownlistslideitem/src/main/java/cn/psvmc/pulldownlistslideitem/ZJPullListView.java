@@ -4,7 +4,6 @@ import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AbsListView;
@@ -15,6 +14,7 @@ import android.widget.RelativeLayout;
 import com.nineoldandroids.animation.ValueAnimator;
 import com.nineoldandroids.animation.ValueAnimator.AnimatorUpdateListener;
 
+import cn.psvmc.pulldownlistslideitem.Listener.ZJListItemClickListener;
 import cn.psvmc.pulldownlistslideitem.Listener.ZJPullListListener;
 
 
@@ -46,13 +46,20 @@ public class ZJPullListView extends RelativeLayout implements OnScrollListener {
     OnScrollListener mOnScrollListener;
     ZJPullListListener mOnPullHeightChangeListener;
 
+    public void setListItemClickListener(ZJListItemClickListener listItemClickListener) {
+        this.listItemClickListener = listItemClickListener;
+    }
+
+    private ZJListItemClickListener listItemClickListener;
+
 
     //是否正在刷新或者是加载更多操作
     boolean isRefreshAction = false;
     //是否正在侧滑操作
     boolean isSlideAction = false;
-    SlideView lastSlideItem = null;
-    SlideView currentSlideItem = null;
+
+    private Integer lastSlideItemPosition;
+    private Integer currentSlideItemPosition;
 
     public void setOnPullHeightChangeListener(
             ZJPullListListener listener) {
@@ -70,6 +77,7 @@ public class ZJPullListView extends RelativeLayout implements OnScrollListener {
     public boolean isRefreshing() {
         return this.isRefreshing;
     }
+
 
     /**
      * 获取点击的位置
@@ -95,7 +103,7 @@ public class ZJPullListView extends RelativeLayout implements OnScrollListener {
             RelativeLayout.LayoutParams lp = (RelativeLayout.LayoutParams) mListView.getLayoutParams();
             int topMargin = lp.topMargin;
             int bottomMargin = lp.bottomMargin;
-
+            int firstVisiblePosition = mListView.getFirstVisiblePosition();
             switch (ev.getAction()) {
                 case MotionEvent.ACTION_DOWN:
                     lastX = (int) ev.getRawX();
@@ -106,12 +114,16 @@ public class ZJPullListView extends RelativeLayout implements OnScrollListener {
                     int y = (int) ev.getY();
                     clickPosition = pointToPosition(x, y);
                     if (clickPosition != INVALID_POSITION) {
-                        currentSlideItem = (SlideView) mListView.getChildAt(clickPosition);
+                        currentSlideItemPosition = clickPosition;
                     }
-                    if (lastSlideItem != null && lastSlideItem != currentSlideItem) {
-                        lastSlideItem.shrink();
+
+                    if (lastSlideItemPosition != null && lastSlideItemPosition != currentSlideItemPosition) {
+                        ((SlideView) mListView.getChildAt(lastSlideItemPosition - firstVisiblePosition)).onRequireTouchEvent(ev);
                     }
-                    currentSlideItem.onRequireTouchEvent(ev);
+                    if (currentSlideItemPosition != null) {
+                        ((SlideView) mListView.getChildAt(currentSlideItemPosition - firstVisiblePosition)).onRequireTouchEvent(ev);
+                    }
+
                     break;
                 case MotionEvent.ACTION_MOVE: {
                     int currentY = (int) ev.getRawY();
@@ -120,16 +132,19 @@ public class ZJPullListView extends RelativeLayout implements OnScrollListener {
                     int stepX = Math.abs(currentX - lastX);
                     //第一次手势来判断用户行为
                     if (!isRefreshAction && !isSlideAction) {
-                        if (stepX > stepY) {
-                            isSlideAction = true;
-                        } else {
-                            isRefreshAction = true;
+                        if (stepX > 2 || stepY > 2) {
+                            if (stepX > stepY) {
+                                isSlideAction = true;
+                            } else {
+                                isRefreshAction = true;
+                            }
                         }
+
                     }
                     if (isRefreshAction) {
-                        if (lastSlideItem != null) {
-                            lastSlideItem.shrink();
-                            lastSlideItem = null;
+                        if (lastSlideItemPosition != null) {
+                            ((SlideView) mListView.getChildAt(lastSlideItemPosition - firstVisiblePosition)).shrink();
+                            lastSlideItemPosition = null;
                         }
                         //手指是否下拉
                         boolean isToBottom = currentY - lastY >= 0 ? true : false;
@@ -137,7 +152,6 @@ public class ZJPullListView extends RelativeLayout implements OnScrollListener {
                         if (stepY < 2) {
                             ev.setAction(MotionEvent.ACTION_UP);
                         } else {
-                            Log.i(TAG, "isRefreshAction ");
                             lastY = currentY;
                             //listview的内容不足一屏时
                             if (isTop && isBottom) {
@@ -200,7 +214,11 @@ public class ZJPullListView extends RelativeLayout implements OnScrollListener {
                         if (stepX < 2) {
 
                         } else {
-                            currentSlideItem.onRequireTouchEvent(ev);
+                            if (currentSlideItemPosition != null) {
+                                ((SlideView) mListView.getChildAt(currentSlideItemPosition - firstVisiblePosition)).onRequireTouchEvent(ev);
+
+                            }
+
                         }
 
                     }
@@ -237,9 +255,24 @@ public class ZJPullListView extends RelativeLayout implements OnScrollListener {
                             }
                         }
                     } else if (isSlideAction) {
-                        currentSlideItem.onRequireTouchEvent(ev);
-                        lastSlideItem = currentSlideItem;
+
+                        if (currentSlideItemPosition != null) {
+                            ((SlideView) mListView.getChildAt(currentSlideItemPosition - firstVisiblePosition)).onRequireTouchEvent(ev);
+                            if (lastSlideItemPosition != null) {
+                                ((SlideView) mListView.getChildAt(lastSlideItemPosition - firstVisiblePosition)).shrink();
+                            }
+
+                            lastSlideItemPosition = currentSlideItemPosition;
+                        }
+
                         isSlideAction = false;
+                    } else {
+                        if (listItemClickListener != null) {
+                            if (clickPosition != INVALID_POSITION) {
+                                listItemClickListener.zjitemClick(clickPosition);
+                            }
+
+                        }
                     }
             }
             return super.onTouchEvent(ev);
@@ -433,7 +466,6 @@ public class ZJPullListView extends RelativeLayout implements OnScrollListener {
 
     @Override
     public void setOnClickListener(OnClickListener l) {
-        Log.i(TAG, "setOnClickListener ");
         //super.setOnClickListener(l);
     }
 }
