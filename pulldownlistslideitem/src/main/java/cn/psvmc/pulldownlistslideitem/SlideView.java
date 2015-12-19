@@ -15,25 +15,12 @@ public class SlideView extends LinearLayout {
     private LinearLayout mViewContent;
     private View itemView;
     private Scroller mScroller;
-    private OnSlideListener mOnSlideListener;
     private int slideItemWidth = 100;
     private int leftSlideWidth = 0;
     private int rightSlideWidth = 0;
 
     private int mLastX = 0;
     private int mLastY = 0;
-
-    public interface OnSlideListener {
-        int SLIDE_STATUS_OFF = 0;
-        int SLIDE_STATUS_START_SCROLL = 1;
-        int SLIDE_STATUS_ON = 2;
-
-        /**
-         * @param view   current SlideView
-         * @param status SLIDE_STATUS_ON or SLIDE_STATUS_OFF
-         */
-        void onSlide(View view, int status);
-    }
 
     public SlideView(Context context, int slideLayoutId, int viewContentId, int leftHolderId, int rightHolderId) {
         super(context);
@@ -55,7 +42,12 @@ public class SlideView extends LinearLayout {
         rightSlideWidth = getPxByDp(rightSlideWidth);
     }
 
-
+    /**
+     * 根据dp获取px
+     *
+     * @param dp
+     * @return
+     */
     public int getPxByDp(int dp) {
         return Math.round(TypedValue.applyDimension(
                         TypedValue.COMPLEX_UNIT_DIP,
@@ -72,7 +64,7 @@ public class SlideView extends LinearLayout {
 
     public void shrink() {
         if (getScrollX() != 0) {
-            this.smoothScrollTo(0, 0);
+            this.smoothScrollTo(0);
         }
     }
 
@@ -82,13 +74,7 @@ public class SlideView extends LinearLayout {
         int scrollX = getScrollX();
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN: {
-                if (!mScroller.isFinished()) {
-                    //mScroller.abortAnimation();
-                    shrink();
-                }
-                if (mOnSlideListener != null) {
-                    mOnSlideListener.onSlide(this, OnSlideListener.SLIDE_STATUS_START_SCROLL);
-                }
+
                 break;
             }
             case MotionEvent.ACTION_MOVE: {
@@ -112,17 +98,18 @@ public class SlideView extends LinearLayout {
             }
             case MotionEvent.ACTION_UP: {
                 int newScrollX = 0;
-                if (scrollX - slideItemWidth * 0.1 > 0) {
-                    newScrollX = rightSlideWidth;
-                } else if (-scrollX - slideItemWidth * 0.1 > 0) {
-                    newScrollX = -leftSlideWidth;
+                //已处于侧滑状态
+                if (mScroller.getCurrX() == -leftSlideWidth || mScroller.getCurrX() == rightSlideWidth) {
+                    newScrollX = 0;
+                } else {
+                    if (scrollX > slideItemWidth * 0.5) {
+                        newScrollX = rightSlideWidth;
+                    } else if (scrollX < (-slideItemWidth * 0.5)) {
+                        newScrollX = -leftSlideWidth;
+                    }
                 }
-                this.smoothScrollTo(newScrollX, 0);
-                if (mOnSlideListener != null) {
-                    mOnSlideListener.onSlide(this,
-                            newScrollX == 0 ? OnSlideListener.SLIDE_STATUS_OFF
-                                    : OnSlideListener.SLIDE_STATUS_ON);
-                }
+
+                this.smoothScrollTo(newScrollX);
                 break;
             }
             default:
@@ -133,16 +120,20 @@ public class SlideView extends LinearLayout {
         mLastY = y;
     }
 
-    private void smoothScrollTo(int destX, int destY) {
+    private void smoothScrollTo(int destX) {
+
         // 缓慢滚动到指定位置
         int scrollX = getScrollX();
+        //间距
         int delta = destX - scrollX;
-        mScroller.startScroll(scrollX, 0, delta, 0, Math.abs(delta) * 3);
+        mScroller.abortAnimation();
+        mScroller.startScroll(scrollX, 0, delta, 0, Math.abs(delta) * 2);
         invalidate();
     }
 
     @Override
     public void computeScroll() {
+        super.computeScroll();
         if (mScroller.computeScrollOffset()) {
             scrollTo(mScroller.getCurrX(), mScroller.getCurrY());
             postInvalidate();

@@ -19,7 +19,7 @@ import cn.psvmc.pulldownlistslideitem.Listener.ZJPullListListener;
 
 
 /**
- * 简单易扩展的刷新组件
+ * 简单易扩展的刷新侧滑组件
  */
 public class ZJPullListView extends RelativeLayout implements OnScrollListener {
     private String TAG = "ZJPullListView";
@@ -42,15 +42,15 @@ public class ZJPullListView extends RelativeLayout implements OnScrollListener {
     RelativeLayout layoutFooter;
 
     private int mCurrentY = 0;
-    boolean pullTag = false;
     OnScrollListener mOnScrollListener;
     ZJPullListListener mOnPullHeightChangeListener;
+
+    //点击事件
+    private ZJListItemClickListener listItemClickListener;
 
     public void setListItemClickListener(ZJListItemClickListener listItemClickListener) {
         this.listItemClickListener = listItemClickListener;
     }
-
-    private ZJListItemClickListener listItemClickListener;
 
 
     //是否正在刷新或者是加载更多操作
@@ -61,8 +61,7 @@ public class ZJPullListView extends RelativeLayout implements OnScrollListener {
     private Integer lastSlideItemPosition;
     private Integer currentSlideItemPosition;
 
-    public void setOnPullHeightChangeListener(
-            ZJPullListListener listener) {
+    public void setOnPullHeightChangeListener(ZJPullListListener listener) {
         this.mOnPullHeightChangeListener = listener;
     }
 
@@ -118,10 +117,16 @@ public class ZJPullListView extends RelativeLayout implements OnScrollListener {
                     }
 
                     if (lastSlideItemPosition != null && lastSlideItemPosition != currentSlideItemPosition) {
-                        ((SlideView) mListView.getChildAt(lastSlideItemPosition - firstVisiblePosition)).onRequireTouchEvent(ev);
+                        SlideView lastSlideItem = ((SlideView) mListView.getChildAt(lastSlideItemPosition - firstVisiblePosition));
+                        if (lastSlideItem != null) {
+                            ((SlideView) mListView.getChildAt(lastSlideItemPosition - firstVisiblePosition)).onRequireTouchEvent(ev);
+                        }
                     }
                     if (currentSlideItemPosition != null) {
-                        ((SlideView) mListView.getChildAt(currentSlideItemPosition - firstVisiblePosition)).onRequireTouchEvent(ev);
+                        SlideView currentSlideItem = ((SlideView) mListView.getChildAt(currentSlideItemPosition - firstVisiblePosition));
+                        if (currentSlideItem != null) {
+                            ((SlideView) mListView.getChildAt(currentSlideItemPosition - firstVisiblePosition)).onRequireTouchEvent(ev);
+                        }
                     }
 
                     break;
@@ -165,11 +170,9 @@ public class ZJPullListView extends RelativeLayout implements OnScrollListener {
                             }
                             //下拉刷新
                             if (isTop && mListView.getTop() >= 0 && bottomMargin == 0) {
-
                                 if (isToBottom && mListView.getTop() <= MAX_PULL_TOP_HEIGHT) {
                                     ev.setAction(MotionEvent.ACTION_UP);
                                     super.onTouchEvent(ev);
-                                    pullTag = true;
 
                                     if (mListView.getTop() > layoutHeader.getHeight()) {
                                         stepY = stepY / 2;
@@ -184,10 +187,8 @@ public class ZJPullListView extends RelativeLayout implements OnScrollListener {
                                 } else if (!isToBottom && topMargin > 0) {
                                     ev.setAction(MotionEvent.ACTION_UP);
                                     super.onTouchEvent(ev);
-                                } else if (!isToBottom && topMargin == 0) {
-                                    if (!pullTag) {
-                                        return super.onTouchEvent(ev);
-                                    }
+                                } else if (bottomMargin == 0 && topMargin == 0) {
+
                                 }
 
                                 return true;
@@ -197,14 +198,12 @@ public class ZJPullListView extends RelativeLayout implements OnScrollListener {
                                 //上拉 上拉的距离小于bottom高时
                                 if (!isToBottom && (parent.getHeight() - mListView.getBottom()) <= MAX_PULL_BOTTOM_HEIGHT && topMargin == 0) {
                                     scrollBottomTo(bottomMargin + stepY);
-                                    pullTag = true;
+
                                 } else if (!isToBottom && bottomMargin > MAX_PULL_BOTTOM_HEIGHT) {
                                     ev.setAction(MotionEvent.ACTION_UP);
                                     super.onTouchEvent(ev);
                                 } else if (isToBottom && bottomMargin == 0) {
-                                    if (!pullTag) {
-                                        return super.onTouchEvent(ev);
-                                    }
+
                                 }
                                 return true;
                             }
@@ -229,10 +228,7 @@ public class ZJPullListView extends RelativeLayout implements OnScrollListener {
                 case MotionEvent.ACTION_CANCEL:
                 case MotionEvent.ACTION_UP:
                     if (isRefreshAction) {
-                        pullTag = false;
-
                         if (topMargin > 0) {
-
                             if (topMargin > REFRESHING_TOP_HEIGHT) {
                                 animateTopTo(REFRESHING_TOP_HEIGHT);
                                 isRefreshing = true;
@@ -255,20 +251,21 @@ public class ZJPullListView extends RelativeLayout implements OnScrollListener {
                             }
                         }
                     } else if (isSlideAction) {
-
                         if (currentSlideItemPosition != null) {
                             ((SlideView) mListView.getChildAt(currentSlideItemPosition - firstVisiblePosition)).onRequireTouchEvent(ev);
-                            if (lastSlideItemPosition != null) {
+                            if (lastSlideItemPosition != null && lastSlideItemPosition != currentSlideItemPosition) {
                                 ((SlideView) mListView.getChildAt(lastSlideItemPosition - firstVisiblePosition)).shrink();
                             }
-
                             lastSlideItemPosition = currentSlideItemPosition;
                         }
-
                         isSlideAction = false;
                     } else {
+                        //单击操作
                         if (listItemClickListener != null) {
                             if (clickPosition != INVALID_POSITION) {
+                                if (lastSlideItemPosition != null) {
+                                    ((SlideView) mListView.getChildAt(lastSlideItemPosition - firstVisiblePosition)).shrink();
+                                }
                                 listItemClickListener.zjitemClick(clickPosition);
                             }
 
@@ -412,9 +409,7 @@ public class ZJPullListView extends RelativeLayout implements OnScrollListener {
 
 
     @Override
-    public void onScroll(AbsListView view, int firstVisibleItem,
-                         int visibleItemCount, int totalItemCount) {
-
+    public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
         if (null != mOnScrollListener) {
             mOnScrollListener.onScroll(view, firstVisibleItem, visibleItemCount, totalItemCount);
         }
@@ -423,9 +418,7 @@ public class ZJPullListView extends RelativeLayout implements OnScrollListener {
                 View lastItem = (View) mListView
                         .getChildAt(visibleItemCount - 1);
                 if (null != lastItem) {
-
                     if (lastItem.getBottom() <= mListView.getHeight()) {
-
                         isBottom = true;
                     } else {
                         isBottom = false;
@@ -464,8 +457,4 @@ public class ZJPullListView extends RelativeLayout implements OnScrollListener {
         }
     }
 
-    @Override
-    public void setOnClickListener(OnClickListener l) {
-        //super.setOnClickListener(l);
-    }
 }

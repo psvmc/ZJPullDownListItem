@@ -18,12 +18,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import cn.psvmc.pulldownlistslideitem.HeaderOrFooter.ZJPullListAnimate;
+import cn.psvmc.pulldownlistslideitem.Listener.ZJListItemClickListener;
 import cn.psvmc.pulldownlistslideitem.Listener.ZJPullListListenerImpl;
 import cn.psvmc.pulldownlistslideitem.SlideView;
 import cn.psvmc.pulldownlistslideitem.ZJPullListView;
 
 
-public class MainActivity extends Activity {
+public class MainActivity extends Activity implements ZJListItemClickListener {
 
     final String TAG = "MainActivity";
     final List<String> adapterData = new ArrayList<>();
@@ -32,7 +33,6 @@ public class MainActivity extends Activity {
     Context mContext;
     ZJPullListView pullDownListView;
 
-    private SlideView mLastSlideViewWithStatusOn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,7 +53,8 @@ public class MainActivity extends Activity {
         pullDownListView = (ZJPullListView) this.findViewById(R.id.pullDownListView);
         final ZJPullListAnimate listFooterView = (ZJPullListAnimate) this.findViewById(R.id.listFooterView);
         final ZJPullListAnimate listHeaderView = (ZJPullListAnimate) this.findViewById(R.id.listHeaderView);
-
+        //点击监听
+        pullDownListView.setListItemClickListener(this);
         mListView = pullDownListView.getListView();
         mListView.setAdapter(mAdapter);
 
@@ -149,7 +150,19 @@ public class MainActivity extends Activity {
 
 
     public void slideItemClick(View v) {
-        Log.i(TAG, "slideItemClick " + pullDownListView.getClickPosition());
-        Log.i(TAG, "slideItemClick " + v.getId());
+        Log.i(TAG, "点击的位置:" + pullDownListView.getClickPosition());
+        if (v.getId() == R.id.check) {
+            Log.i(TAG, "点击了选择");
+        } else if (v.getId() == R.id.edit) {
+            Log.i(TAG, "点击了编辑");
+        } else if (v.getId() == R.id.delete) {
+            Log.i(TAG, "点击了删除");
+        }
+
+    }
+
+    @Override
+    public void zjitemClick(int position) {
+        Log.i(TAG, "点击的位置:" + position);
     }
 }
