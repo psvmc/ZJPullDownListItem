@@ -36,10 +36,9 @@ public class SlideView extends LinearLayout {
         mViewContent = (LinearLayout) findViewById(viewContentId);
         LinearLayout leftHolder = (LinearLayout) findViewById(leftHolderId);
         LinearLayout rightHolder = (LinearLayout) findViewById(rightHolderId);
+        slideItemWidth = getPxByDp(slideItemWidth);
         leftSlideWidth = leftHolder.getChildCount() * slideItemWidth;
         rightSlideWidth = rightHolder.getChildCount() * slideItemWidth;
-        leftSlideWidth = getPxByDp(leftSlideWidth);
-        rightSlideWidth = getPxByDp(rightSlideWidth);
     }
 
     /**
@@ -86,9 +85,9 @@ public class SlideView extends LinearLayout {
                 }
                 int newScrollX = scrollX - deltaX;
                 if (deltaX != 0) {
-                    if (newScrollX < -leftSlideWidth) {
+                    if (newScrollX <= -leftSlideWidth) {
                         newScrollX = -leftSlideWidth;
-                    } else if (newScrollX > rightSlideWidth) {
+                    } else if (newScrollX >= rightSlideWidth) {
                         newScrollX = rightSlideWidth;
                     }
                     this.scrollTo(newScrollX, 0);
@@ -99,16 +98,12 @@ public class SlideView extends LinearLayout {
             case MotionEvent.ACTION_UP: {
                 int newScrollX = 0;
                 //已处于侧滑状态
-                if (mScroller.getCurrX() == -leftSlideWidth || mScroller.getCurrX() == rightSlideWidth) {
-                    newScrollX = 0;
-                } else {
-                    if (scrollX > slideItemWidth * 0.5) {
-                        newScrollX = rightSlideWidth;
-                    } else if (scrollX < (-slideItemWidth * 0.5)) {
-                        newScrollX = -leftSlideWidth;
-                    }
-                }
 
+                if (scrollX > rightSlideWidth * 0.5) {
+                    newScrollX = rightSlideWidth;
+                } else if (scrollX < (-leftSlideWidth * 0.5)) {
+                    newScrollX = -leftSlideWidth;
+                }
                 this.smoothScrollTo(newScrollX);
                 break;
             }
