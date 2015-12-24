@@ -78,6 +78,13 @@ public class ZJPullListView extends RelativeLayout implements OnScrollListener {
     }
 
 
+    public void shrink() {
+        if (lastSlideItemPosition != null) {
+            int firstVisiblePosition = mListView.getFirstVisiblePosition();
+            ((SlideView) mListView.getChildAt(lastSlideItemPosition - firstVisiblePosition)).shrink();
+        }
+    }
+
     /**
      * 获取点击的位置
      *
