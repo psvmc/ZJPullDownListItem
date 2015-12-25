@@ -153,6 +153,7 @@ public class ZJPullListView extends RelativeLayout implements OnScrollListener {
                         }
 
                     }
+
                     if (isRefreshAction) {
                         if (lastSlideItemPosition != null) {
                             ((SlideView) mListView.getChildAt(lastSlideItemPosition - firstVisiblePosition)).shrink();
@@ -175,10 +176,11 @@ public class ZJPullListView extends RelativeLayout implements OnScrollListener {
                                     isBottom = true;
                                 }
                             }
+
                             //下拉刷新
                             if (isTop && mListView.getTop() >= 0 && bottomMargin == 0) {
                                 if (isToBottom && mListView.getTop() <= MAX_PULL_TOP_HEIGHT) {
-                                    ev.setAction(MotionEvent.ACTION_UP);
+                                    //ev.setAction(MotionEvent.ACTION_UP);
                                     super.onTouchEvent(ev);
 
                                     if (mListView.getTop() > layoutHeader.getHeight()) {
@@ -191,8 +193,7 @@ public class ZJPullListView extends RelativeLayout implements OnScrollListener {
                                         mCurrentY += stepY;
                                         scrollTopTo(mCurrentY);
                                     }
-                                } else if (!isToBottom && topMargin > 0) {
-                                    ev.setAction(MotionEvent.ACTION_UP);
+                                } else if (!isToBottom && topMargin >= 0) {
                                     super.onTouchEvent(ev);
                                 } else if (bottomMargin == 0 && topMargin == 0) {
 

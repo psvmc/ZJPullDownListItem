@@ -39,7 +39,7 @@ public class MainActivity extends Activity implements ZJListItemClickListener {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mContext = this;
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 5; i++) {
             adapterData.add("111");
             adapterData.add("222");
             adapterData.add("333");
@@ -84,7 +84,9 @@ public class MainActivity extends Activity implements ZJListItemClickListener {
 
                     @Override
                     public void run() {
-                        adapterData.add("000");
+                        adapterData.add("aaa");
+                        adapterData.add("bbb");
+                        adapterData.add("ccc");
                         mAdapter.notifyDataSetChanged();
                         pullDownListView.endingRefreshOrLoadMore();
                     }
