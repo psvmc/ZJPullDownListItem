@@ -1,6 +1,8 @@
 package cn.psvmc.pulldownlistslideitem.Listener;
 
 
+import android.os.Handler;
+
 import cn.psvmc.pulldownlistslideitem.HeaderOrFooter.ZJPullListAnimate;
 import cn.psvmc.pulldownlistslideitem.ZJPullListView;
 
@@ -63,7 +65,15 @@ public class ZJPullListListenerImpl implements ZJPullListListener {
 
     @Override
     public void endRefresh() {
-        listHeaderView.stopAnimate();
+        new Handler().postDelayed(new Runnable() {
+
+            @Override
+            public void run() {
+                listHeaderView.stopAnimate();
+            }
+
+        }, 600);
+
     }
 
     @Override

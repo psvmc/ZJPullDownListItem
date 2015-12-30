@@ -91,7 +91,7 @@ public class MainActivity extends Activity implements ZJListItemClickListener {
                         pullDownListView.endingRefreshOrLoadMore();
                     }
 
-                }, 2000);
+                }, 1000);
             }
 
 
@@ -129,7 +129,7 @@ public class MainActivity extends Activity implements ZJListItemClickListener {
                     textView.setPadding(50, 0, 0, 0);
                     slideView = new SlideView(
                             MainActivity.this,
-                            R.layout.slide_view_merge,
+                            R.layout.slide_view_merge2,
                             R.id.view_content,
                             R.id.left_holder,
                             R.id.right_holder

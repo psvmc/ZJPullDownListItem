@@ -3,6 +3,7 @@ package cn.psvmc.pulldownlistslideitem;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.os.Handler;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
@@ -114,7 +115,6 @@ public class ZJPullListView extends RelativeLayout implements OnScrollListener {
                 case MotionEvent.ACTION_DOWN:
                     lastX = (int) ev.getRawX();
                     lastY = (int) ev.getRawY();
-
                     //获取点击的Item项
                     int x = (int) ev.getX();
                     int y = (int) ev.getY();
@@ -400,14 +400,27 @@ public class ZJPullListView extends RelativeLayout implements OnScrollListener {
      * 数据加载后调用该方法
      */
     public void endingRefreshOrLoadMore() {
-        isRefreshing = false;
+
         if (mListView.getTop() > 0) {
-            animateTopTo(0);
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    isRefreshing = false;
+                    animateTopTo(0);
+                }
+            }, 600);
+
             if (null != mOnPullHeightChangeListener) {
                 mOnPullHeightChangeListener.endRefresh();
             }
         } else if (mListView.getBottom() < this.getHeight()) {
-            animateBottomTo(0);
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    isRefreshing = false;
+                    animateBottomTo(0);
+                }
+            }, 600);
             if (null != mOnPullHeightChangeListener) {
                 mOnPullHeightChangeListener.endLoadMore();
             }
@@ -423,7 +436,7 @@ public class ZJPullListView extends RelativeLayout implements OnScrollListener {
         }
         if (mListView.getCount() > 0) {
             if ((firstVisibleItem + visibleItemCount) == totalItemCount) {
-                View lastItem = (View) mListView
+                View lastItem = mListView
                         .getChildAt(visibleItemCount - 1);
                 if (null != lastItem) {
                     if (lastItem.getBottom() <= mListView.getHeight()) {
