@@ -262,7 +262,11 @@ public class ZJPullListView extends RelativeLayout implements OnScrollListener {
                         if (currentSlideItemPosition != null) {
                             ((SlideView) mListView.getChildAt(currentSlideItemPosition - firstVisiblePosition)).onRequireTouchEvent(ev);
                             if (lastSlideItemPosition != null && lastSlideItemPosition != currentSlideItemPosition) {
-                                ((SlideView) mListView.getChildAt(lastSlideItemPosition - firstVisiblePosition)).shrink();
+                                View view = mListView.getChildAt(lastSlideItemPosition - firstVisiblePosition);
+                                if(view!=null){
+                                    ((SlideView)view).shrink();
+                                }
+
                             }
                             lastSlideItemPosition = currentSlideItemPosition;
                         }
